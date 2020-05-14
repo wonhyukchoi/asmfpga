@@ -1,0 +1,388 @@
+WIDTH = 16;
+DEPTH = 32768;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT;
+BEGIN
+
+0000 : 4dff; -- 'li $sp 65535 '-- Initialize stack
+0001 : 6dff; -- 'li $sp 65535 '-- Initialize stack
+0002 : e010; -- 'jal multiply'
+0003 : e010; -- 'jal multiply'
+0004 : e010; -- 'jal multiply'
+0005 : e010; -- 'jal multiply'
+0006 : e010; -- 'jal multiply'
+0007 : e010; -- 'jal multiply'
+0008 : e010; -- 'jal multiply'
+0009 : e010; -- 'jal multiply'
+000a : e010; -- 'jal multiply'
+000b : e010; -- 'jal multiply'
+000c : 4302; -- 'li $v0 finish'
+000d : 6340; -- 'li $v0 finish'
+000e : e0e3; -- 'jal strOut'
+000f : d002; -- 'j main'
+-- multiply
+0010 : 0933; -- 'cp $s0 $v0 '-- Save prompt params
+0011 : 0a43; -- 'cp $s1 $v1'
+0012 : 0b43; -- 'cp $s2 $v1'
+0013 : 3900; -- 'slti $s0 0'
+0014 : 3a00; -- 'slti $s1 0'
+0015 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0016 : bed0; -- 'sw $ra $sp 0 '-- Store $r
+0017 : e02d; -- 'jal absValue1'
+0018 : 0313; -- 'cp $v0 $r0'
+0019 : 0b33; -- 'cp $s2 $v0 '-- Save $v0
+001a : e030; -- 'jal absValue2'
+001b : 0413; -- 'cp $v1 $r0'
+001c : 03b3; -- 'cp $v0 $s2 '-- Revert $v0
+001d : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+001e : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+001f : 0593; -- 'cp $t0 $s0'
+0020 : 05a6; -- 'xor $t0 $s1 '-- If the sign bits differ, $t0 will become a 1.
+0021 : 2501; -- 'subi $t0 1 '-- For branching
+0022 : c52b; -- 'beq $t0 negMultiply'
+0023 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0024 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0025 : 4100; -- 'li $r0 16 '-- Prescribed settings to use multLoop
+0026 : 6110; -- 'li $r0 16 '-- Prescribed settings to use multLoop
+0027 : 5200; -- 'andi $r1 0'
+0028 : e037; -- 'jal multLoop '-- $r1 = multiplicand
+0029 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+002a : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+002b : 0123; -- 'cp $r0 $r1 '-- Saves result
+002c : fe00; -- 'jr $ra'
+-- absValue1
+-- EXTREMELY awkward subroutine b/c I have no branch & link
+-- Takes $v0 and its sign $s0 = 0 if $v0 < 0
+002d : 0133; -- 'cp $r0 $v0'
+002e : c905; -- 'beq $s0 absoluteValue'
+002f : fe00; -- 'jr $ra'
+-- absValue2
+0030 : 0143; -- 'cp $r0 $v1'
+0031 : 0343; -- 'cp $v0 $v1'
+0032 : ca01; -- 'beq $s1 absoluteValue'
+0033 : fe00; -- 'jr $ra'
+-- absValue
+-- Returns $r0 = -$v0.
+0034 : 5100; -- 'andi $r0 0'
+0035 : 0131; -- 'sub $r0 $v0'
+0036 : fe00; -- 'jr $ra'
+-- multLoop
+-- $r0 = 16, $r1 = 0 must be set beforehand.
+-- $r0 keeps track of how many times we loop
+-- $r1 = running sum.
+-- $v0 the multiplicand, $v1 the multiplier
+-- Returns $r1 = $v0 * $v1.
+0037 : 0643; -- 'cp $t1 $v1'
+0038 : 0a43; -- 'cp $s1 $v1'
+0039 : 5601; -- 'andi $t1 1'
+003a : 2601; -- 'subi $t1 1'
+003b : 0463; -- 'cp $v1 $t1'
+003c : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+003d : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+003e : e049; -- 'jal addRoutine '-- $r1 = multiplicand
+003f : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0040 : 1d02; -- 'addi $sp 2 '-- Increment stack point
+0041 : 04a3; -- 'cp $v1 $s1'
+0042 : 4500; -- 'li $t0 1'
+0043 : 6501; -- 'li $t0 1'
+0044 : 0358; -- 'sll $v0 $t0'
+0045 : 0459; -- 'srl $v1 $t0'
+0046 : 2101; -- 'subi $r0 1'
+0047 : c112; -- 'beq $r0 exit'
+0048 : d037; -- 'j multLoop'
+-- addRoutine
+-- $v0 = multiplicand
+-- $v1 = multiplier & 1 : 0 ? something else
+0049 : c402; -- 'beq $v1 addMultiplicand'
+004a : 1200; -- 'addi $r1 0 '-- If mutiplier & 1 = 0, don't add to running sum
+004b : fe00; -- 'jr $ra'
+-- addMultiplicand
+004c : 0230; -- 'add $r1 $v0'
+004d : fe00; -- 'jr $ra'
+-- negMultiply
+004e : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+004f : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0050 : 4100; -- 'li $r0 16 '-- Prescribed settings to use multLoop
+0051 : 6110; -- 'li $r0 16 '-- Prescribed settings to use multLoop
+0052 : 5200; -- 'andi $r1 0'
+0053 : e037; -- 'jal multLoop '-- $r1 = multiplicand
+0054 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0055 : 1d02; -- 'addi $sp 2 '-- Increment stack point
+0056 : 0523; -- 'cp $t0 $r1 '-- Saves result
+0057 : 5100; -- 'andi $r0 0'
+0058 : 0151; -- 'sub $r0 $t0 '-- Gets the negative result
+0059 : fe00; -- 'jr $ra'
+-- exit
+-- GOTO statement for breaking loops
+005a : fe00; -- 'jr $ra'
+-- intToReg
+-- Reads int from prompt and returns it in $r0.
+005b : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+005c : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+005d : 4302; -- 'li $v0 placeHolder '-- placeholder addr to load string
+005e : 6386; -- 'li $v0 placeHolder '-- placeholder addr to load string
+005f : e0ef; -- 'jal strIn '-- #### LOADS STRING ####
+0060 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0061 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+0062 : 4302; -- 'li $v0 placeHolder '-- reload addr of first char
+0063 : 6386; -- 'li $v0 placeHolder '-- reload addr of first char
+0064 : 8530; -- 'lb $t0 $v0 0 '-- Loads first char of string; check for sign
+0065 : 252d; -- 'subi $t0 45 '-- '-' is 45 in ascii
+0066 : c507; -- 'beq $t0 negIntToReg '-- Need separate subroutine for neg numbers
+0067 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0068 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0069 : 5100; -- 'andi $r0 0 '-- Zero return value
+006a : e079; -- 'jal strToInt '-- ### Returns int value in $r0 ###
+006b : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+006c : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+006d : fe00; -- 'jr $ra'
+-- negIntToReg
+006e : 1301; -- 'addi $v0 1 '-- Integer will actually start after sign bit
+006f : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0070 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0071 : 5100; -- 'andi $r0 0 '-- Zero return value
+0072 : e079; -- 'jal strToInt '-- ### Returns int value in $r0 ###
+0073 : 0513; -- 'cp $t0 $r0 '-- Saves the returned integer
+0074 : 5100; -- 'andi $r0 0'
+0075 : 0151; -- 'sub $r0 $t0 '-- Make return value negative
+0076 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0077 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+0078 : fe00; -- 'jr $ra'
+-- strToInt
+-- $v0 should point to the first addr of the string
+-- Converts the string to an integer and returns in $r0
+-- If you don't have an numeric value, this will break!
+-- $r0 must be set to 0 before this subroutine.
+0079 : 0a33; -- 'cp $s1 $v0 '-- Saves char addr
+007a : 8ba0; -- 'lb $s2 $s1 0 '-- Loads char
+007b : cbde; -- 'beq $s2 exit '-- If null terminator, exit
+007c : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+007d : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+007e : 0313; -- 'cp $v0 $r0 '-- Copy prev sum into multiplication
+007f : e087; -- 'jal timesTen '-- running sum = 10 * prev value + new digit
+0080 : 2b30; -- 'subi $s2 48 '-- Subtract ascii offset to get int value
+0081 : 01b0; -- 'add $r0 $s2 '-- + new digit part
+0082 : 03a3; -- 'cp $v0 $s1 '-- Reload char addr
+0083 : 1301; -- 'addi $v0 1 '-- Increment string addr
+0084 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0085 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+0086 : d079; -- 'j strToInt '-- Loop until null terminator
+-- timesTen
+-- Returns $r0 = $v0 * 10
+0087 : 4500; -- 'li $t0 1'
+0088 : 6501; -- 'li $t0 1'
+0089 : 4600; -- 'li $t1 3'
+008a : 6603; -- 'li $t1 3'
+008b : 0133; -- 'cp $r0 $v0'
+008c : 0158; -- 'sll $r0 $t0 '-- $r0 = $r0 << 1
+008d : 0533; -- 'cp $t0 $v0'
+008e : 0568; -- 'sll $t0 $t1 '-- $t0 = $r0 << 3
+008f : 0150; -- 'add $r0 $t0 '-- $r0 = $r0 << 1 + $r0 << 3
+0090 : fe00; -- 'jr $ra'
+-- regToInt
+-- Sends register content of $v0 to IO
+-- Converts the signed 16-bit integer to ascii.
+0091 : 0533; -- 'cp $t0 $v0 '-- Copy reg value for usage
+0092 : 3500; -- 'slti $t0 0'
+0093 : c53b; -- 'beq $t0 negRegToInt '-- do neg version
+0094 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0095 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0096 : e09b; -- 'jal printRegContent'
+0097 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+0098 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+0099 : fe00; -- 'jr $ra'
+-- exitJumper
+009a : d05a; -- 'j exit'
+-- printRegContent
+-- FIXME: use array instead of copypasta
+009b : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+009c : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+009d : 4427; -- 'li $v1 10000 '-- To print floor($v0/10000)
+009e : 6410; -- 'li $v1 10000 '-- To print floor($v0/10000)
+009f : 5100; -- 'andi $r0 0 '-- Needed in order to use returnDividend
+00a0 : e0c7; -- 'jal returnDividend'
+00a1 : 0313; -- 'cp $v0 $r0 '-- Copies the dividend
+00a2 : 1330; -- 'addi $v0 48 '-- Adds ascii offset
+00a3 : e0fa; -- 'jal charOut '-- Prints the dividend
+00a4 : 0323; -- 'cp $v0 $r1 '-- The remainder is now the new divisor
+00a5 : 4403; -- 'li $v1 1000 '-- To print floor($v0/1000)
+00a6 : 64e8; -- 'li $v1 1000 '-- To print floor($v0/1000)
+00a7 : 5100; -- 'andi $r0 0 '-- Needed in order to use returnDividend
+00a8 : e0c7; -- 'jal returnDividend'
+00a9 : 0313; -- 'cp $v0 $r0 '-- Copies the dividend
+00aa : 1330; -- 'addi $v0 48 '-- Adds ascii offset
+00ab : e0fa; -- 'jal charOut '-- Prints the dividend
+00ac : 0323; -- 'cp $v0 $r1 '-- The remainder is now the new divisor
+00ad : 4400; -- 'li $v1 100 '-- To print floor($v0/100)
+00ae : 6464; -- 'li $v1 100 '-- To print floor($v0/100)
+00af : 5100; -- 'andi $r0 0 '-- Needed in order to use returnDividend
+00b0 : e0c7; -- 'jal returnDividend'
+00b1 : 0313; -- 'cp $v0 $r0 '-- Copies the dividend
+00b2 : 1330; -- 'addi $v0 48 '-- Adds ascii offset
+00b3 : e0fa; -- 'jal charOut '-- Prints the dividend
+00b4 : 0323; -- 'cp $v0 $r1 '-- The remainder is now the new divisor
+00b5 : 4400; -- 'li $v1 10 '-- To print floor($v0/10)
+00b6 : 640a; -- 'li $v1 10 '-- To print floor($v0/10)
+00b7 : 5100; -- 'andi $r0 0 '-- Needed in order to use returnDividend
+00b8 : e0c7; -- 'jal returnDividend'
+00b9 : 0313; -- 'cp $v0 $r0 '-- Copies the dividend
+00ba : 1330; -- 'addi $v0 48 '-- Adds ascii offset
+00bb : e0fa; -- 'jal charOut '-- Prints the dividend
+00bc : 0323; -- 'cp $v0 $r1 '-- The remainder is now the new divisor
+00bd : 4400; -- 'li $v1 1 '-- To print floor($v0/1)
+00be : 6401; -- 'li $v1 1 '-- To print floor($v0/1)
+00bf : 5100; -- 'andi $r0 0 '-- Needed in order to use returnDividend
+00c0 : e0c7; -- 'jal returnDividend'
+00c1 : 0313; -- 'cp $v0 $r0 '-- Copies the dividend
+00c2 : 1330; -- 'addi $v0 48 '-- Adds ascii offset
+00c3 : e0fa; -- 'jal charOut '-- Prints the dividend
+00c4 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+00c5 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00c6 : fe00; -- 'jr $ra'
+-- returnDividend
+-- Returns dividend and remainder of $v0/$v1.
+-- Dividend: $r0, remainder: $r1
+-- To avoid superflous code, you must set $r0 to 0
+-- before calling this subroutine!!
+00c7 : 0233; -- 'cp $r1 $v0 '-- Saves running subtracted value
+00c8 : 0341; -- 'sub $v0 $v1 '-- $v0 = $v0 - $v1
+00c9 : 0533; -- 'cp $t0 $v0 '-- For negativity branching
+00ca : 15ff; -- 'addi $t0 255 '-- For checking negativity
+00cb : 35ff; -- 'slti $t0 255'
+00cc : c58d; -- 'beq $t0 exit '-- If running dividend < $v1, we are done
+00cd : 1101; -- 'addi $r0 1 '-- If $v0>$v1, increment running dividend
+00ce : d0c7; -- 'j returnDividend'
+-- negRegToInt
+-- Prints -$v0.
+-- Should take in $v0, a registers whose values
+-- should be printed out to stdout.
+00cf : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+00d0 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+00d1 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+00d2 : b3d0; -- 'sw $v0 $sp 0 '-- Store $v0
+00d3 : 4300; -- 'li $v0 45 '-- ascii 45 is '-'
+00d4 : 632d; -- 'li $v0 45 '-- ascii 45 is '-'
+00d5 : e0fa; -- 'jal charOut '-- #### Print char ####
+00d6 : 93d0; -- 'lw $v0 $sp 0 '-- Reload $v0
+00d7 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00d8 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+00d9 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00da : 5500; -- 'andi $t0 0 '-- Zeros register
+00db : 0531; -- 'sub $t0 $v0 '-- Gets negative version of $v0
+00dc : 0353; -- 'cp $v0 $t0 '-- Copies -$v0 into $v0
+00dd : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+00de : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+00df : e09b; -- 'jal printRegContent'
+00e0 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+00e1 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00e2 : fe00; -- 'jr $ra'
+-- strout
+-- Sends string starting from $v0 until null termination.
+-- $v0 should hold the addr of the first char.
+00e3 : 0933; -- 'cp $s0 $v0 '-- Copies register for usage
+00e4 : 8590; -- 'lb $t0 $s0 0 '-- Reads first byte
+00e5 : c5b4; -- 'beq $t0 exitJumper '-- if we have a null terminator, exit
+00e6 : 0353; -- 'cp $v0 $t0 '-- Set parameter for charOut
+00e7 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+00e8 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+00e9 : e0fa; -- 'jal charOut '-- #### Print char ####
+00ea : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+00eb : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00ec : 0393; -- 'cp $v0 $s0 '-- Reset parameter for strOut loop
+00ed : 1301; -- 'addi $v0 1 '-- Get next character
+00ee : d0e3; -- 'j strOut '-- Loop until null terminator
+-- strin
+-- Reads string in from REG_IOBUFFER_1 to addr set at $v0.
+-- Will read continously until a null terminator is given to REG_IOBUFFER_1.
+00ef : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+00f0 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+00f1 : e107; -- 'jal charIn '-- #### Reads in the first char ####
+00f2 : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+00f3 : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+00f4 : 0513; -- 'cp $t0 $r0 '-- For temp calculation
+00f5 : 250d; -- 'subi $t0 13 '-- check if it's CRLF
+00f6 : c5a3; -- 'beq $t0 exitJumper '-- If we got a CRLF, exit
+00f7 : a130; -- 'sb $r0 $v0 0 '-- Stores prompt char into addr
+00f8 : 1301; -- 'addi $v0 1 '-- Increment byte address for storing char
+00f9 : d0ef; -- 'j strIn '-- Loop until null terminator
+-- charout
+-- Sends char in $v0 into first memory of REG_IOBUFFER_1.
+00fa : 4502; -- 'li $t0 REG_IOCONTROL '-- Gets addr of directive
+00fb : 653c; -- 'li $t0 REG_IOCONTROL '-- Gets addr of directive
+00fc : 9750; -- 'lw $t2 $t0 0 '-- Gets memory addr of REG_IOCONTROL
+00fd : 9770; -- 'lw $t2 $t2 0 '-- Gets contents of REG_IOCONTROL
+00fe : 4600; -- 'li $t1 2 '-- To test for bit 1 of REG_IOCONTROL
+00ff : 6602; -- 'li $t1 2 '-- To test for bit 1 of REG_IOCONTROL
+0100 : 0674; -- 'and $t1 $t2 '-- If first bit is set, $t0 should remain 2
+0101 : c6f8; -- 'beq $t1 charOut '-- If not ready, check again
+0102 : 4502; -- 'li $t0 REG_IOBUFFER_1 '-- Gets addr of directive
+0103 : 653e; -- 'li $t0 REG_IOBUFFER_1 '-- Gets addr of directive
+0104 : 9550; -- 'lw $t0 $t0 0 '-- Gets memory addr of REG_IOBUFFER_1
+0105 : a350; -- 'sb $v0 $t0 0 '-- Sends char to IOBuffer
+0106 : fe00; -- 'jr $ra'
+-- charin
+-- Reads first char in from REG_IOBUFFER_1 to $r0.
+0107 : 4502; -- 'li $t0 REG_IOCONTROL '-- Gets addr of directive
+0108 : 653c; -- 'li $t0 REG_IOCONTROL '-- Gets addr of directive
+0109 : 9750; -- 'lw $t2 $t0 0 '-- Gets memory addr of REG_IOCONTROL
+010a : 9770; -- 'lw $t2 $t2 0 '-- Gets contents of REG_IOCONTROL
+010b : 4600; -- 'li $t1 1 '-- To test for bit 0 of REG_IOCONTROL
+010c : 6601; -- 'li $t1 1 '-- To test for bit 0 of REG_IOCONTROL
+010d : 0674; -- 'and $t1 $t2 '-- If first bit is set, $t0 should remain 1
+010e : c6f8; -- 'beq $t1 charIn '-- If not ready, check again
+010f : 4502; -- 'li $t0 REG_IOBUFFER_1 '-- Gets addr of directive
+0110 : 653e; -- 'li $t0 REG_IOBUFFER_1 '-- Gets addr of directive
+0111 : 9550; -- 'lw $t0 $t0 0 '-- Gets memory addr of <REG_IOBUFFER_1>
+0112 : 8150; -- 'lb $r0 $t0 0 '-- Stores contents of REG_IOBUFFER_1
+0113 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0114 : bed0; -- 'sw $ra $sp 0 '-- Store $ra
+0115 : 2d02; -- 'subi $sp 2 '-- Decrement stack pointer
+0116 : b3d0; -- 'sw $v0 $sp 0 '-- Store $ra
+0117 : 0313; -- 'cp $v0 $r0'
+0118 : e0fa; -- 'jal charOut'
+0119 : 93d0; -- 'lw $v0 $sp 0 '-- Reload $ra
+011a : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+011b : 9ed0; -- 'lw $ra $sp 0 '-- Reload $ra
+011c : 1d02; -- 'addi $sp 2 '-- Increment stack pointer
+011d : fe00; -- 'jr $ra'
+011e : ff00; -- 'REG_IOCONTROL: .word 0xff00'
+011f : ff04; -- 'REG_IOBUFFER_1: .word 0xff04'
+0120 : 0a0d; -- '"\r\n"'
+0121 : 4420; -- '" D"'
+0122 : 6e6f; -- '"on"'
+0123 : 2065; -- '"e "'
+0124 : 756d; -- '"mu"'
+0125 : 746c; -- '"lt"'
+0126 : 7069; -- '"ip"'
+0127 : 796c; -- '"ly"'
+0128 : 6e69; -- '"in"'
+0129 : 2067; -- '"g "'
+012a : 6574; -- '"te"'
+012b : 206e; -- '"n "'
+012c : 756e; -- '"nu"'
+012d : 626d; -- '"mb"'
+012e : 7265; -- '"er"'
+012f : 2173; -- '"s!"'
+0130 : 0a0d; -- '"\r\n"'
+0131 : 7349; -- '"Is"'
+0132 : 7420; -- '" t"'
+0133 : 6968; -- '"hi"'
+0134 : 2073; -- '"s "'
+0135 : 7573; -- '"su"'
+0136 : 7070; -- '"pp"'
+0137 : 736f; -- '"os"'
+0138 : 6465; -- '"ed"'
+0139 : 7420; -- '" t"'
+013a : 206f; -- '"o "'
+013b : 6562; -- '"be"'
+013c : 6620; -- '" f"'
+013d : 7361; -- '"as"'
+013e : 3f74; -- '"t?"'
+013f : 0a0d; -- '"\r\n"'
+0140 : 0000; -- '"\\0\\0"'
+0141 : 3333; -- 'firstMem: .word 0x3333'
+0142 : 8888; -- 'secondMem: .word 0x8888'
+0143 : cccc; -- 'placeHolder: .word 0xcccc'
+
+END

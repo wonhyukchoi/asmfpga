@@ -1,0 +1,17 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity notVector is
+  port (input8bit: in std_ulogic_vector(7 downto 0);
+        inverted8bit: out std_ulogic_vector(7 downto 0));
+end entity notVector;
+
+architecture behavioral of notVector is
+begin
+  invert: process(input8bit)
+		begin
+      for i in 7 downto 0 loop
+        inverted8bit(i) <= not input8bit(i);
+      end loop;
+	end process invert;
+end architecture behavioral; 

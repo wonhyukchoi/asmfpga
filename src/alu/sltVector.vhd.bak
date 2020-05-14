@@ -1,0 +1,38 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Can't use generic becuase re-using old bit8Adder which should be refactored
+
+-- Returns 0 if op1 < op2. 
+-- Is this confusing? I think so. 
+-- But it makes it easier to use beq.
+-- But I should just modify my design to make it more intuitive.
+-- Let there be dragons...
+
+entity sltVector is
+  port (op1Input, op2Input: in std_ulogic_vector(7 downto 0);
+        sltOutput: out std_ulogic_vector(7 downto 0));
+end entity sltVector;
+
+architecture structural of sltVector is
+signal op2Complement: std_ulogic_vector(7 downto 0);
+signal subResult: std_ulogic_vector(7 downto 0);
+
+begin
+
+complementOp2: work.complement port map(
+	input8bit => op2Input,
+	twosComplement => op2Complement);
+	
+subtraction: work.addVector port map(
+	a => op1Input,
+	b => op2Complement,
+	f => subResult);
+
+	
+-- Determines sign from the high most bit	
+sltOutput <= x"01" when subResult(7) = '0' else
+       x"00" when subResult(7) = '1' else
+       (others => 'X');	
+
+end architecture structural; 

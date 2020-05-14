@@ -1,0 +1,22 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity complement is
+  port (input8bit: in std_ulogic_vector(7 downto 0);
+        twosComplement: out std_ulogic_vector(7 downto 0));
+end entity complement;
+
+architecture structural of complement is
+signal inverted8bit: std_ulogic_vector(7 downto 0);
+begin
+
+notBits: work.notVector port map(
+	input8bit => input8bit,
+	inverted8bit => inverted8bit);
+
+addition: work.addVector port map(
+	a => inverted8bit,
+	b => x"01",
+	f => twosComplement);
+
+end architecture structural; 
