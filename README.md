@@ -4,7 +4,7 @@
 
 This project has been aimed to create a hardware and software multiplier capable of taking two signed 16-bit integers from I/O, multiplying them, and then returning them to I/O.
 
-* [Principles of Operation](https://github.com/wonhyukchoi/asmfpga/blob/master/principles_of_operation/principles_of_operation.md)
+* [Principles of Operation](https://github.com/wonhyukchoi/asmfpga/blob/master/principles_of_operations/principles_of_operations.md)
 * [`VHDL` source code](https://github.com/wonhyukchoi/asmfpga/blob/master/src)
 * [Assembler and emulator](https://github.com/wonhyukchoi/asmfpga/blob/master/asm_and_emu)
 * [High-level language representation](https://github.com/wonhyukchoi/asmfpga/blob/master/high_level_language)

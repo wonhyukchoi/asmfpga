@@ -2,8 +2,8 @@
 
 ### Wonhyuk Choi
 
-* Word size: $16$
-* Registers: Sixteen $16$- bit GPR's 
+* Word size: 16
+* Registers: Sixteen 16- bit GPR's 
 * Register breakdown:
   * $0 Zero register : alias \$0
   * $1, \$2 return value registers : alias \$r0, \$r1
